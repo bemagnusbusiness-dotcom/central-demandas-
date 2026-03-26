@@ -52,6 +52,24 @@ input[type=date]::-webkit-calendar-picker-indicator{filter:invert(0.5)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
 .fu{animation:fadeUp 0.25s ease both}
+.mobile-nav{display:none}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+@media(max-width:768px){
+  .sidebar{display:none!important}
+  .main-content{margin-left:0!important;padding-bottom:72px!important}
+  .top-bar{padding:0 14px!important}
+  .page-content{padding:14px!important}
+  .mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:#171717;border-top:1px solid #2a2a2a;z-index:200;padding:6px 0 env(safe-area-inset-bottom,6px)}
+  .mobile-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4px 2px;cursor:pointer;gap:2px;min-width:0}
+  .mobile-nav-icon{font-size:19px}
+  .mobile-nav-label{font-size:9px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:0 2px}
+  .grid-2col{grid-template-columns:1fr!important}
+  .grid-3col{grid-template-columns:1fr!important}
+  .grid-4col{grid-template-columns:1fr 1fr!important}
+  .sec-body{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{min-width:520px}
+  .top-bar input{width:130px!important}
+}
 `;
 
 const iS = { width:"100%", background:"#1f1f1f", border:"1px solid #2a2a2a", borderRadius:8, padding:"9px 12px", color:"#f0ece4", fontSize:13.5, outline:"none" };
@@ -61,7 +79,7 @@ const PDot = ({p}) => <span style={{width:7,height:7,borderRadius:"50%",display:
 const SBadge = ({s}) => { const c=sCfg[s]||{}; return <span style={{display:"inline-flex",alignItems:"center",gap:5,fontSize:11,padding:"3px 9px",borderRadius:20,fontWeight:500,background:c.bg,color:c.color,border:`1px solid ${c.color}33`}}>● {c.label}</span>; };
 const Tag = ({label,v="client"}) => { const m={client:{bg:"rgba(90,154,224,0.1)",c:"#5a9ae0",b:"rgba(90,154,224,0.2)"},internal:{bg:"rgba(200,169,110,0.1)",c:"#c8a96e",b:"rgba(200,169,110,0.2)"},type:{bg:"rgba(200,169,110,0.06)",c:"#c8a96e",b:"rgba(200,169,110,0.15)"}}; const x=m[v]||m.client; return <span style={{fontSize:10,padding:"2px 7px",borderRadius:4,fontWeight:500,background:x.bg,color:x.c,border:`1px solid ${x.b}`}}>{label}</span>; };
 const Btn = ({children,onClick,variant="ghost",style:s={},disabled}) => { const m={primary:{background:"#c8a96e",color:"#000",border:"none"},ghost:{background:"transparent",color:"#888",border:"1px solid #2a2a2a"},danger:{background:"rgba(224,90,90,0.12)",color:"#e05a5a",border:"1px solid rgba(224,90,90,0.2)"}}; return <button onClick={onClick} disabled={disabled} style={{display:"flex",alignItems:"center",gap:6,padding:"7px 14px",borderRadius:8,cursor:disabled?"not-allowed":"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:13,fontWeight:500,transition:"all 0.15s",opacity:disabled?0.5:1,...m[variant],...s}}>{children}</button>; };
-const Sec = ({title,action,children,style:s={}}) => <div style={{background:"#171717",border:"1px solid #2a2a2a",borderRadius:12,overflow:"hidden",...s}}><div style={{padding:"14px 18px",borderBottom:"1px solid #2a2a2a",display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:14,fontWeight:600,color:"#f0ece4",flex:1}}>{title}</span>{action}</div>{children}</div>;
+const Sec = ({title,action,children,style:s={}}) => <div style={{background:"#171717",border:"1px solid #2a2a2a",borderRadius:12,overflow:"hidden",...s}}><div style={{padding:"14px 18px",borderBottom:"1px solid #2a2a2a",display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:14,fontWeight:600,color:"#f0ece4",flex:1}}>{title}</span>{action}</div><div className="sec-body">{children}</div></div>;
 const Modal = ({open,onClose,children}) => { if(!open) return null; return <div onClick={e=>{if(e.target===e.currentTarget)onClose();}} style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",zIndex:999,display:"flex",alignItems:"center",justifyContent:"center"}}><div className="fu" style={{background:"#171717",border:"1px solid #2a2a2a",borderRadius:14,width:500,maxWidth:"95vw",maxHeight:"90vh",overflowY:"auto",padding:28,position:"relative"}}><button onClick={onClose} style={{position:"absolute",right:18,top:18,background:"none",border:"none",color:"#666",cursor:"pointer",fontSize:18,padding:4}}>✕</button>{children}</div></div>; };
 const Toast = ({msg,visible}) => <div style={{position:"fixed",bottom:24,right:24,background:"#171717",border:"1px solid #2a2a2a",borderRadius:10,padding:"12px 18px",display:"flex",alignItems:"center",gap:10,fontSize:13,color:"#f0ece4",boxShadow:"0 8px 24px rgba(0,0,0,0.5)",transform:visible?"translateY(0)":"translateY(80px)",opacity:visible?1:0,transition:"all 0.3s cubic-bezier(0.34,1.56,0.64,1)",zIndex:9999,minWidth:200,pointerEvents:"none"}}>{msg}</div>;
 const StatCard = ({label,value,sub,accent}) => <div style={{background:"#171717",border:"1px solid #2a2a2a",borderRadius:12,padding:"18px 20px",position:"relative",overflow:"hidden"}}><div style={{position:"absolute",top:0,left:0,right:0,height:2,background:accent}} /><div style={{fontSize:11,textTransform:"uppercase",letterSpacing:"0.08em",color:"#888",marginBottom:8}}>{label}</div><div style={{fontSize:34,fontFamily:"'DM Serif Display',serif",color:"#f0ece4",lineHeight:1}}>{value}</div><div style={{fontSize:11,color:"#555",marginTop:6}}>{sub}</div></div>;
@@ -599,20 +617,26 @@ export default function App() {
   return <>
     <style>{CSS}</style>
     {/* SIDEBAR */}
-    <div style={{position:"fixed",left:0,top:0,bottom:0,width:240,background:"#171717",borderRight:"1px solid #2a2a2a",display:"flex",flexDirection:"column",zIndex:100}}>
+    <div className="sidebar" style={{position:"fixed",left:0,top:0,bottom:0,width:240,background:"#171717",borderRight:"1px solid #2a2a2a",display:"flex",flexDirection:"column",zIndex:100}}>
       <div style={{padding:"22px 20px 18px",borderBottom:"1px solid #2a2a2a"}}><div style={{fontFamily:"'DM Serif Display',serif",fontSize:20,color:"#c8a96e",lineHeight:1.1}}>Central<br/>de Demandas</div><div style={{fontSize:11,color:"#666",marginTop:3,letterSpacing:"0.05em",textTransform:"uppercase"}}>Be Magnus · Gestão</div></div>
       <nav style={{flex:1,padding:"12px 0",overflowY:"auto"}}>{sections.map(sec=><div key={sec.title} style={{marginBottom:4}}><div style={{fontSize:10,textTransform:"uppercase",letterSpacing:"0.1em",color:"#444",padding:"8px 20px 4px"}}>{sec.title}</div>{sec.items.map(nav=>{const active=page===nav.id;return <div key={nav.id} onClick={()=>{setPage(nav.id);setClientView(null);}} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 20px",cursor:"pointer",color:active?"#c8a96e":"#888",background:active?"rgba(200,169,110,0.07)":"transparent",borderLeft:`2px solid ${active?"#c8a96e":"transparent"}`,transition:"all 0.15s",fontSize:13.5}} onMouseEnter={e=>{if(!active){e.currentTarget.style.background="#1f1f1f";e.currentTarget.style.color="#f0ece4";}}} onMouseLeave={e=>{if(!active){e.currentTarget.style.background="transparent";e.currentTarget.style.color="#888";}}}><span style={{fontSize:15,width:18,textAlign:"center"}}>{nav.icon}</span><span style={{flex:1}}>{nav.label}</span>{nav.badge!==null&&<span style={{fontSize:10,padding:"1px 6px",borderRadius:20,background:active?"rgba(200,169,110,0.15)":"#1f1f1f",border:`1px solid ${active?"rgba(200,169,110,0.3)":"#2a2a2a"}`,color:active?"#c8a96e":"#666"}}>{nav.badge}</span>}</div>;})}</div>)}</nav>
       <div style={{padding:"14px 16px",borderTop:"1px solid #2a2a2a",display:"flex",alignItems:"center",gap:10}}><Av idx={currentUser.id} size={30} /><div style={{flex:1,minWidth:0}}><div style={{fontSize:12.5,fontWeight:500,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{currentUser.name}</div><div style={{fontSize:10,color:"#666"}}>{isAdmin?"Administrador":"Funcionário"}</div></div><button onClick={handleLogout} title="Sair" style={{fontSize:13,padding:"4px 8px",borderRadius:8,border:"1px solid #2a2a2a",background:"transparent",color:"#555",cursor:"pointer"}}>⏻</button></div>
     </div>
 
     {/* MAIN */}
-    <div style={{marginLeft:240,minHeight:"100vh",display:"flex",flexDirection:"column"}}>
-      <div style={{position:"sticky",top:0,zIndex:50,background:"rgba(15,15,15,0.92)",backdropFilter:"blur(10px)",borderBottom:"1px solid #2a2a2a",padding:"0 28px",height:56,display:"flex",alignItems:"center",gap:14}}>
+    <div className="main-content" style={{marginLeft:240,minHeight:"100vh",display:"flex",flexDirection:"column"}}>
+      <div className="top-bar" style={{position:"sticky",top:0,zIndex:50,background:"rgba(15,15,15,0.92)",backdropFilter:"blur(10px)",borderBottom:"1px solid #2a2a2a",padding:"0 28px",height:56,display:"flex",alignItems:"center",gap:14}}>
         <div style={{fontFamily:"'DM Serif Display',serif",fontSize:20,color:"#f0ece4",flex:1}}>{navItems.find(n=>n.id===page)?.label||"Dashboard"}</div>
         <div style={{display:"flex",alignItems:"center",gap:8,background:"#171717",border:"1px solid #2a2a2a",borderRadius:8,padding:"7px 12px",width:220}}><span style={{color:"#555",fontSize:13}}>⌕</span><input value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder="Buscar..." style={{background:"none",border:"none",outline:"none",color:"#f0ece4",fontSize:13,width:"100%",fontFamily:"'DM Sans',sans-serif"}} /></div>
         <div style={{display:"flex",alignItems:"center",gap:6,fontSize:11,color:saving?"#c8a96e":"#3a3a3a",transition:"color 0.3s"}}><span style={{width:6,height:6,borderRadius:"50%",background:saving?"#c8a96e":"#2a5a2a",animation:saving?"pulse 1s infinite":"none"}} />{saving?"Salvando...":"Sincronizado"}</div>
       </div>
-      <div style={{padding:28,flex:1}}><CurrentPage /></div>
+      <div className="page-content" style={{padding:28,flex:1}}><CurrentPage /></div>
+    </div>
+
+    {/* MOBILE BOTTOM NAV */}
+    <div className="mobile-nav">
+      {navItems.map(nav=>{const active=page===nav.id;return <div key={nav.id} className="mobile-nav-item" onClick={()=>{setPage(nav.id);setClientView(null);}} style={{color:active?"#c8a96e":"#555"}}><span className="mobile-nav-icon">{nav.icon}</span><span className="mobile-nav-label">{nav.label}</span></div>;})}
+      <div className="mobile-nav-item" onClick={handleLogout} style={{color:"#555"}}><span className="mobile-nav-icon">⏻</span><span className="mobile-nav-label">Sair</span></div>
     </div>
 
     {/* FINANCIAL MODALS */}
