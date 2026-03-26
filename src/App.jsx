@@ -135,8 +135,8 @@ export default function App() {
   },[]);
   const save=useCallback(async(nd)=>{
     setSaving(true);
-    try{await supabase.from("app_data").upsert({key:STORAGE_KEY,value:nd,updated_at:new Date().toISOString()});}
-    catch(e){console.error(e);}
+    const {error}=await supabase.from("app_data").upsert({key:STORAGE_KEY,value:nd},{onConflict:"key"});
+    if(error){console.error("Save error:",error);setToast({msg:"❌ Erro ao salvar: "+error.message,visible:true});setTimeout(()=>setToast(t=>({...t,visible:false})),4000);}
     setSaving(false);
   },[]);
   useEffect(()=>{load();},[load]);
