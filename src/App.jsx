@@ -325,7 +325,7 @@ export default function App() {
             <Btn variant="ghost" style={{fontSize:12}} onClick={()=>{setCcForm({name:"",bank:"",type:"checking",accountNumber:"",routing:"",balance:"",notes:""});setCcModal({type:"conta",clientId:client.id});}}>+ Conta Bancária</Btn>
             <Btn variant="primary" onClick={()=>{setCcForm({name:"",issuer:"",lastFour:"",limit:"",balance:"",dueDay:"",storeCard:false,store:"",notes:""});setCcModal({type:"cartao",clientId:client.id});}}>+ Cartão</Btn>
           </>}
-          {clientTab==="financeiro"&&finTab==="statements"&&isAdmin&&<Btn variant="primary" onClick={()=>{setFinForm({month:selMonth,file:null,balance:"",reconciled:false,notes:"",contaId:selConta||""});setFinModal({type:"statement",clientId:client.id});}}>+ Statement</Btn>}
+          {clientTab==="financeiro"&&finTab==="statements"&&isAdmin&&<Btn variant="primary" onClick={()=>{setFinForm({month:selMonth,file:null,balance:"",reconciled:false,notes:"",contaId:selConta||"",contaNome:""});setFinModal({type:"statement",clientId:client.id});}}>+ Statement</Btn>}
           {clientTab==="financeiro"&&finTab==="fechamento"&&isAdmin&&<Btn variant="primary" onClick={()=>{setFinForm({month:selMonth,receitas:"",salario:"",outras_saidas:"",retirada:"",caixa_anterior:"",notes:""});setFinModal({type:"fechamento",clientId:client.id});}}>+ Fechamento</Btn>}
         </div>
         {/* MAIN TABS */}
@@ -474,7 +474,7 @@ export default function App() {
                     <div style={{width:46,height:46,borderRadius:9,background:"rgba(90,154,224,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>🏦</div>
                     <div style={{flex:1}}>
                       <div style={{fontSize:14,fontWeight:600,color:"#f0ece4"}}>{mStr(s.month)}</div>
-                      {acct&&<div style={{fontSize:11,color:"#666",marginTop:2}}>{acct.kind==="conta"?"🏦":"💳"} {acct.name||acct.store||acct.issuer}</div>}
+                      {(s.contaNome||acct)&&<div style={{fontSize:11,color:"#666",marginTop:2}}>{acct?(acct.kind==="conta"?"🏦":"💳"):"🏦"} {s.contaNome||(acct.name||acct.store||acct.issuer)}</div>}
                       {s.balance&&<div style={{fontSize:12,color:"#5ab87a",marginTop:2}}>Saldo: {s.balance.startsWith("$")?s.balance:"$"+s.balance}</div>}
                       {s.notes&&<div style={{fontSize:11,color:"#666",marginTop:3}}>{s.notes}</div>}
                     </div>
@@ -673,7 +673,11 @@ export default function App() {
           const cl=db.clients.find(c=>c.id===finModal.clientId);
           const fin2=cl?.financeiro||{};
           const allAcc=[...(fin2.contas||[]).map(x=>({...x,kind:"conta"})),...(fin2.cartoes||[]).map(x=>({...x,kind:"cartao"}))];
-          return allAcc.length>0?<div style={{marginBottom:14}}><label style={{display:"block",fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",color:"#888",marginBottom:6}}>Conta / Cartão</label><select style={iS} value={finForm.contaId||""} onChange={e=>setFinForm(f=>({...f,contaId:e.target.value}))}><option value="">Selecionar conta...</option>{allAcc.map(a=><option key={a.id} value={a.id}>{a.kind==="conta"?"🏦":"💳"} {a.name||a.store||a.issuer}</option>)}</select></div>:null;
+          return <div style={{marginBottom:14}}>
+            <label style={{display:"block",fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",color:"#888",marginBottom:6}}>Conta / Cartão</label>
+            {allAcc.length>0&&<select style={{...iS,marginBottom:8}} value={finForm.contaId||""} onChange={e=>{const a=allAcc.find(x=>x.id===e.target.value);setFinForm(f=>({...f,contaId:e.target.value,contaNome:a?`${a.name||a.store||a.issuer}`:f.contaNome}));}}><option value="">Selecionar conta cadastrada...</option>{allAcc.map(a=><option key={a.id} value={a.id}>{a.kind==="conta"?"🏦":"💳"} {a.name||a.store||a.issuer}</option>)}</select>}
+            <input style={iS} value={finForm.contaNome||""} onChange={e=>setFinForm(f=>({...f,contaNome:e.target.value}))} placeholder="Ou escreva o nome da conta / cartão..." />
+          </div>;
         })()}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
           <div><label style={{display:"block",fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",color:"#888",marginBottom:6}}>Mês de Referência</label><input type="month" style={iS} value={finForm.month||selMonth} onChange={e=>setFinForm(f=>({...f,month:e.target.value}))} /></div>
