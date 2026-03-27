@@ -129,9 +129,9 @@ export default function App() {
   const load=useCallback(async()=>{
     if(savingRef.current)return;
     try{
-      const {data,error}=await supabase.from("app_data").select("value").eq("key",STORAGE_KEY).limit(1).order("id",{ascending:false});
-      if(error||!data||data.length===0)setDb(DEFAULT_DATA);
-      else setDb(data[0].value);
+      const {data,error}=await supabase.from("app_data").select("value").eq("key",STORAGE_KEY).maybeSingle();
+      if(error||!data)setDb(DEFAULT_DATA);
+      else setDb(data.value);
     }catch{setDb(DEFAULT_DATA);}
     setLoading(false);
   },[]);
