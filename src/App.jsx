@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "./supabase";
 
 const STORAGE_KEY = "bm-dashboard-v7";
@@ -101,6 +101,7 @@ export default function App() {
   const [db,setDb]=useState(null);
   const [loading,setLoading]=useState(true);
   const [saving,setSaving]=useState(false);
+  const savingRef=useRef(false);
   const [currentUser,setCurrentUser]=useState(()=>{try{const s=localStorage.getItem("bm-user");return s?USERS.find(u=>u.id===JSON.parse(s))||null:null;}catch{return null;}});
   const [loginForm,setLoginForm]=useState({userId:0,pin:""});
   const [loginError,setLoginError]=useState("");
@@ -126,6 +127,7 @@ export default function App() {
   const [searchQ,setSearchQ]=useState("");
 
   const load=useCallback(async()=>{
+    if(savingRef.current)return;
     try{
       const {data,error}=await supabase.from("app_data").select("value").eq("key",STORAGE_KEY).limit(1).order("id",{ascending:false});
       if(error||!data||data.length===0)setDb(DEFAULT_DATA);
@@ -134,8 +136,8 @@ export default function App() {
     setLoading(false);
   },[]);
   const save=useCallback(async(nd)=>{
+    savingRef.current=true;
     setSaving(true);
-    // Try update first; if no rows affected, insert
     const {data:existing}=await supabase.from("app_data").select("id").eq("key",STORAGE_KEY).limit(1);
     let error;
     if(existing&&existing.length>0){
@@ -144,10 +146,11 @@ export default function App() {
       ({error}=await supabase.from("app_data").insert({key:STORAGE_KEY,value:nd}));
     }
     if(error){console.error("Save error:",error);setToast({msg:"❌ Erro ao salvar: "+error.message,visible:true});setTimeout(()=>setToast(t=>({...t,visible:false})),4000);}
+    savingRef.current=false;
     setSaving(false);
   },[]);
   useEffect(()=>{load();},[load]);
-  useEffect(()=>{const i=setInterval(load,15000);return()=>clearInterval(i);},[load]);
+  useEffect(()=>{const i=setInterval(load,30000);return()=>clearInterval(i);},[load]);
   const update=(nd)=>{setDb(nd);save(nd);};
   const showToast=(msg)=>{setToast({msg,visible:true});setTimeout(()=>setToast(t=>({...t,visible:false})),2800);};
 
