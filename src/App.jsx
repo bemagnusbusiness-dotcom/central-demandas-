@@ -3,7 +3,7 @@ import { supabase } from "./supabase";
 
 const STORAGE_KEY = "bm-dashboard-v7";
 const USERS = [
-  { id: 0, initials: "IC", name: "Isabella C.", color: "#B19379", pin: "1234", role: "admin" },
+  { id: 0, initials: "IC", name: "Isabella C.", color: "#B19379", pin: "238621", role: "admin" },
   { id: 1, initials: "AA", name: "Adrielle A.", color: "#9a7ae0", pin: "0000", role: "staff" },
 ];
 const TEAM = USERS;
