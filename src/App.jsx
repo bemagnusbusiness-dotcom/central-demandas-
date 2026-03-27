@@ -138,9 +138,9 @@ export default function App() {
   const save=useCallback(async(nd)=>{
     savingRef.current=true;
     setSaving(true);
-    const {data:existing}=await supabase.from("app_data").select("id").eq("key",STORAGE_KEY).limit(1);
+    const {data:existing}=await supabase.from("app_data").select("key").eq("key",STORAGE_KEY).maybeSingle();
     let error;
-    if(existing&&existing.length>0){
+    if(existing){
       ({error}=await supabase.from("app_data").update({value:nd}).eq("key",STORAGE_KEY));
     }else{
       ({error}=await supabase.from("app_data").insert({key:STORAGE_KEY,value:nd}));
