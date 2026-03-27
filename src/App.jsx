@@ -128,12 +128,18 @@ export default function App() {
   const [ticketFilter,setTicketFilter]=useState("all");
   const [searchQ,setSearchQ]=useState("");
 
+  const INTERNAL_COMPANIES=DEFAULT_DATA.clients.filter(c=>c.isInternal);
+  const mergeInternal=(d)=>{
+    const existing=d.clients||[];
+    const missing=INTERNAL_COMPANIES.filter(ic=>!existing.find(c=>c.id===ic.id));
+    return missing.length>0?{...d,clients:[...existing,...missing]}:d;
+  };
   const load=useCallback(async()=>{
     if(savingRef.current)return;
     try{
       const {data,error}=await supabase.from("app_data").select("value").eq("key",STORAGE_KEY).maybeSingle();
       if(error||!data)setDb(DEFAULT_DATA);
-      else setDb(data.value);
+      else setDb(mergeInternal(data.value));
     }catch{setDb(DEFAULT_DATA);}
     setLoading(false);
   },[]);
