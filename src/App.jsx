@@ -150,7 +150,11 @@ export default function App() {
     setSaving(false);
   },[]);
   useEffect(()=>{load();},[load]);
-  useEffect(()=>{const i=setInterval(load,30000);return()=>clearInterval(i);},[load]);
+  useEffect(()=>{
+    const onFocus=()=>{if(!savingRef.current)load();};
+    window.addEventListener("focus",onFocus);
+    return()=>window.removeEventListener("focus",onFocus);
+  },[load]);
   const update=(nd)=>{setDb(nd);save(nd);};
   const showToast=(msg)=>{setToast({msg,visible:true});setTimeout(()=>setToast(t=>({...t,visible:false})),2800);};
 
