@@ -417,11 +417,7 @@ export default function App() {
                     {cc.expiry&&<div><div style={{fontSize:9,textTransform:"uppercase",letterSpacing:"0.08em",color:"#7A6558",marginBottom:2}}>Validade</div><div style={{color:"#ccc"}}>{showCcNum[`cc${cc.id}`]?cc.expiry:"••/••"}</div></div>}
                     {cc.cvv&&<div><div style={{fontSize:9,textTransform:"uppercase",letterSpacing:"0.08em",color:"#7A6558",marginBottom:2}}>CVV</div><div style={{color:"#ccc"}}>{showCcNum[`cc${cc.id}`]?cc.cvv:"•••"}</div></div>}
                   </div>}
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,position:"relative"}}>
-                    {cc.limit&&<div><div style={{fontSize:9,textTransform:"uppercase",letterSpacing:"0.08em",color:"#7A6558",marginBottom:3}}>Limite</div><div style={{fontSize:12,color:"#4B2E2B",fontWeight:600}}>${parseFloat(cc.limit).toLocaleString("en-US",{minimumFractionDigits:0})}</div></div>}
-                    {cc.balance&&<div><div style={{fontSize:9,textTransform:"uppercase",letterSpacing:"0.08em",color:"#7A6558",marginBottom:3}}>Saldo Atual</div><div style={{fontSize:12,color:"#e05a5a",fontWeight:600}}>${parseFloat(cc.balance).toLocaleString("en-US",{minimumFractionDigits:0})}</div></div>}
-                    {cc.dueDay&&<div><div style={{fontSize:9,textTransform:"uppercase",letterSpacing:"0.08em",color:"#7A6558",marginBottom:3}}>Vence dia</div><div style={{fontSize:12,color:parseInt(cc.dueDay)<new Date().getDate()?"#e05a5a":"#B19379",fontWeight:600}}>{cc.dueDay}º</div></div>}
-                  </div>
+                  {cc.dueDay&&<div style={{marginTop:4}}><span style={{fontSize:9,textTransform:"uppercase",letterSpacing:"0.08em",color:"#7A6558"}}>Vence dia </span><span style={{fontSize:12,color:parseInt(cc.dueDay)<new Date().getDate()?"#e05a5a":"#B19379",fontWeight:600}}>{cc.dueDay}º</span></div>}
                   {cc.notes&&<div style={{marginTop:12,fontSize:11,color:"#777",padding:"6px 10px",background:"rgba(0,0,0,0.3)",borderRadius:6}}>{cc.notes}</div>}
                 </div>;})}
                 </div>}
@@ -756,10 +752,6 @@ export default function App() {
           <div><label style={{display:"block",fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",color:"#7A6558",marginBottom:6}}>Validade (MM/AA)</label><input style={iS} maxLength={5} value={ccForm.expiry||""} onChange={e=>{let v=e.target.value.replace(/[^0-9]/g,"");if(v.length>2)v=v.slice(0,2)+"/"+v.slice(2,4);setCcForm(f=>({...f,expiry:v}));}} placeholder="12/28" /></div>
           <div><label style={{display:"block",fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",color:"#7A6558",marginBottom:6}}>CVV</label><input style={iS} maxLength={4} value={ccForm.cvv||""} onChange={e=>setCcForm(f=>({...f,cvv:e.target.value.replace(/[^0-9]/g,"")}))} placeholder="123" /></div>
           <div><label style={{display:"block",fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",color:"#7A6558",marginBottom:6}}>Dia de Vencimento</label><input style={iS} type="number" min="1" max="31" value={ccForm.dueDay||""} onChange={e=>setCcForm(f=>({...f,dueDay:e.target.value}))} placeholder="15" /></div>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
-          <div><label style={{display:"block",fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",color:"#7A6558",marginBottom:6}}>Limite ($)</label><input style={iS} type="number" value={ccForm.limit||""} onChange={e=>setCcForm(f=>({...f,limit:e.target.value}))} placeholder="0.00" /></div>
-          <div><label style={{display:"block",fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",color:"#7A6558",marginBottom:6}}>Saldo Atual ($)</label><input style={iS} type="number" value={ccForm.balance||""} onChange={e=>setCcForm(f=>({...f,balance:e.target.value}))} placeholder="0.00" /></div>
         </div>
         <div style={{marginBottom:20}}><label style={{display:"block",fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",color:"#7A6558",marginBottom:6}}>Notas</label><textarea style={{...iS,resize:"vertical",minHeight:60}} value={ccForm.notes||""} onChange={e=>setCcForm(f=>({...f,notes:e.target.value}))} placeholder="Observações..." /></div>
         <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>{ccModal.item&&<Btn variant="danger" onClick={()=>{deleteCcItem(ccModal.clientId,"cartoes",ccModal.item.id);setCcModal(null);}}>Excluir</Btn>}<Btn onClick={()=>setCcModal(null)}>Cancelar</Btn><Btn variant="primary" onClick={saveCcItem}>Salvar Cartão</Btn></div>
