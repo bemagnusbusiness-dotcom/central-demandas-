@@ -19,6 +19,8 @@ const DEFAULT_DATA = {
     { id:5, name:"Innova Pro Construction",     type:"General Construction", sops:[], accesses:[], financeiro:{ ap:[], recibos:[], statements:[], fechamentos:[], contas:[], cartoes:[] } },
     { id:6, name:"James McGuiness",             type:"General Construction", sops:[], accesses:[], financeiro:{ ap:[], recibos:[], statements:[], fechamentos:[], contas:[], cartoes:[] } },
     { id:7, name:"Backland Construction LLC",   type:"General Construction", sops:[], accesses:[], financeiro:{ ap:[], recibos:[], statements:[], fechamentos:[], contas:[], cartoes:[] } },
+    { id:90, name:"Be Magnus",                  type:"Business Advisory",    isInternal:true, sops:[], accesses:[], financeiro:{ ap:[], recibos:[], statements:[], fechamentos:[], contas:[], cartoes:[] } },
+    { id:91, name:"Campagnaro Flooring",         type:"Flooring",             isInternal:true, sops:[], accesses:[], financeiro:{ ap:[], recibos:[], statements:[], fechamentos:[], contas:[], cartoes:[] } },
   ],
   sops: [
     { id:20, title:"Onboarding de Novo Cliente",   category:"ops",    icon:"🤝", updated:"Mar 2026" },
@@ -278,9 +280,10 @@ export default function App() {
     {id:"deadlines",icon:"◷",label:"Prazos",badge:openItems.filter(t=>t.due).length},
     {id:"internal",icon:"◈",label:"Tarefas Internas",badge:db.tasks.filter(t=>t.status!=="concluido").length},
     {id:"sop",icon:"◉",label:"SOPs",badge:db.sops.length},
-    {id:"clients",icon:"◯",label:"Clientes",badge:db.clients.length},
+    {id:"clients",icon:"◯",label:"Clientes",badge:db.clients.filter(c=>!c.isInternal).length},
     {id:"tickets",icon:"◻",label:"Tickets",badge:db.tickets.filter(t=>t.status!=="concluido").length},
     {id:"privateTickets",icon:"🔒",label:"Tickets Privados",badge:(db.privateTickets||[]).filter(t=>t.status!=="concluido").length},
+    {id:"empresas",icon:"🏢",label:"Empresas",badge:null},
   ];
   const navStaff=[
     {id:"tickets",icon:"◻",label:"Tickets",badge:db.tickets.filter(t=>t.status!=="concluido").length},
@@ -513,7 +516,7 @@ export default function App() {
     const tByC={};db.tickets.forEach(t=>{if(!tByC[t.client])tByC[t.client]={total:0,open:0};tByC[t.client].total++;if(t.status!=="concluido")tByC[t.client].open++;});
     return <div className="fu">
       <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:24}}><h2 style={{fontFamily:"'DM Serif Display',serif",fontSize:26,color:"#4B2E2B",flex:1}}>Clientes</h2>{isAdmin&&<Btn variant="primary" onClick={()=>openModal("client")}>+ Novo Cliente</Btn>}</div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:16}}>{db.clients.map(c=>{const st=tByC[c.id]||{total:0,open:0};const done=st.total-st.open;const pct=st.total?Math.round((done/st.total)*100):0;return <div key={c.id} onClick={()=>setClientView(c.id)} style={{background:"#EDE8E2",border:"1px solid #D7CDC1",borderRadius:10,padding:18,cursor:"pointer",transition:"all 0.2s"}} onMouseEnter={e=>{e.currentTarget.style.borderColor="#B19379";e.currentTarget.style.transform="translateY(-2px)";}} onMouseLeave={e=>{e.currentTarget.style.borderColor="#D7CDC1";e.currentTarget.style.transform="";}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:16}}>{db.clients.filter(c=>!c.isInternal).map(c=>{const st=tByC[c.id]||{total:0,open:0};const done=st.total-st.open;const pct=st.total?Math.round((done/st.total)*100):0;return <div key={c.id} onClick={()=>setClientView(c.id)} style={{background:"#EDE8E2",border:"1px solid #D7CDC1",borderRadius:10,padding:18,cursor:"pointer",transition:"all 0.2s"}} onMouseEnter={e=>{e.currentTarget.style.borderColor="#B19379";e.currentTarget.style.transform="translateY(-2px)";}} onMouseLeave={e=>{e.currentTarget.style.borderColor="#D7CDC1";e.currentTarget.style.transform="";}}>
         <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}><div style={{width:38,height:38,borderRadius:9,flexShrink:0,background:"linear-gradient(135deg,#B19379,rgba(177,147,121,0.3))",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'DM Serif Display',serif",fontSize:16,color:"#000",fontWeight:700}}>{c.name[0]}</div><div><div style={{fontSize:14,fontWeight:600}}>{c.name}</div><div style={{fontSize:11,color:"#7A6558"}}>{c.type}</div></div></div>
         <div style={{display:"flex",gap:14,marginBottom:12}}>{[["Total",st.total,"#4B2E2B"],["Abertos",st.open,"#e0904a"],["Concluídos",done,"#5ab87a"],["SOPs",c.sops.length,"#9a7ae0"]].map(([l,v,col])=><div key={l} style={{textAlign:"center"}}><div style={{fontSize:18,fontFamily:"'DM Serif Display',serif",color:col}}>{v}</div><div style={{fontSize:10,color:"#A09080",textTransform:"uppercase",letterSpacing:"0.06em"}}>{l}</div></div>)}</div>
         <div style={{height:3,background:"#D7CDC1",borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:`${pct}%`,background:"linear-gradient(90deg,#B19379,#DCC7AA)",borderRadius:2,transition:"width 0.5s"}} /></div>
@@ -557,7 +560,33 @@ export default function App() {
     </div>;
   };
 
-  const pages={overview:PageOverview,internal:PageInternal,clients:PageClients,tickets:PageTickets,sop:PageSOP,deadlines:PageDeadlines,privateTickets:PagePrivateTickets};
+  const PageEmpresas=()=>{
+    const companies=db.clients.filter(c=>c.isInternal);
+    if(clientView!==null){
+      const c=companies.find(x=>x.id===clientView);
+      if(c){
+        // Reuse PageClients detail by temporarily setting page to clients
+        // Just delegate to PageClients which already handles clientView
+        return <PageClients />;
+      }
+    }
+    return <div className="fu">
+      <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:24}}><h2 style={{fontFamily:"'DM Serif Display',serif",fontSize:26,color:"#4B2E2B",flex:1}}>🏢 Empresas</h2></div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:16}}>
+        {companies.map(c=><div key={c.id} onClick={()=>{setClientView(c.id);setClientTab("accesses");}} style={{background:"#EDE8E2",border:"1px solid #D7CDC1",borderRadius:10,padding:22,cursor:"pointer",transition:"all 0.2s"}} onMouseEnter={e=>{e.currentTarget.style.borderColor="#B19379";e.currentTarget.style.transform="translateY(-2px)";}} onMouseLeave={e=>{e.currentTarget.style.borderColor="#D7CDC1";e.currentTarget.style.transform="";}}>
+          <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:14}}>
+            <div style={{width:44,height:44,borderRadius:10,flexShrink:0,background:"linear-gradient(135deg,#B19379,rgba(177,147,121,0.3))",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'DM Serif Display',serif",fontSize:20,color:"#000",fontWeight:700}}>{c.name[0]}</div>
+            <div><div style={{fontSize:15,fontWeight:600,color:"#4B2E2B"}}>{c.name}</div><div style={{fontSize:11,color:"#7A6558",marginTop:2}}>{c.type}</div></div>
+          </div>
+          <div style={{display:"flex",gap:16}}>
+            {[["Acessos",(c.accesses||[]).length,"#B19379"],["Contas",(c.financeiro?.contas||[]).length,"#5a9ae0"],["Cartões",(c.financeiro?.cartoes||[]).length,"#9a7ae0"]].map(([l,v,col])=><div key={l}><div style={{fontSize:18,fontFamily:"'DM Serif Display',serif",color:col}}>{v}</div><div style={{fontSize:10,color:"#A09080",textTransform:"uppercase",letterSpacing:"0.06em"}}>{l}</div></div>)}
+          </div>
+        </div>)}
+      </div>
+    </div>;
+  };
+
+  const pages={overview:PageOverview,internal:PageInternal,clients:PageClients,tickets:PageTickets,sop:PageSOP,deadlines:PageDeadlines,privateTickets:PagePrivateTickets,empresas:PageEmpresas};
   const allowed=isAdmin?Object.keys(pages):["tickets","deadlines","clients"];
   const safePage=allowed.includes(page)?page:"tickets";
   const CurrentPage=pages[safePage]||PageOverview;
@@ -577,7 +606,7 @@ export default function App() {
         <label style={{display:"block",fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",color:"#7A6558",marginBottom:6}}>{form._quickType?`Detalhes — ${form._quickType} *`:"Ou escreva o título *"}</label>
         <div style={{position:"relative",display:"flex",alignItems:"center"}}>{form._quickType&&<span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",fontSize:13,color:"#B19379",fontWeight:600,pointerEvents:"none",whiteSpace:"nowrap"}}>{form._quickType}&nbsp;—&nbsp;</span>}<input style={{...iS,paddingLeft:form._quickType?`${(form._quickType.length+4)*8.2}px`:"12px"}} value={form._quickType?(form.title||"").replace(`${form._quickType} — `,""):(form.title||"")} onChange={e=>{const v=e.target.value;setForm(f=>({...f,title:f._quickType?`${f._quickType} — ${v}`:v}));}} placeholder={form._quickType?"Detalhes adicionais...":"Escreva o título..."} disabled={!canEdit} /></div>
       </div>
-      {it&&<div style={{marginBottom:15}}><label style={{display:"block",fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",color:"#7A6558",marginBottom:6}}>Cliente *</label><select style={iS} value={form.client??""} onChange={e=>setForm(f=>({...f,client:parseInt(e.target.value)}))} disabled={!canEdit}>{db.clients.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div>}
+      {it&&<div style={{marginBottom:15}}><label style={{display:"block",fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",color:"#7A6558",marginBottom:6}}>Cliente *</label><select style={iS} value={form.client??""} onChange={e=>setForm(f=>({...f,client:parseInt(e.target.value)}))} disabled={!canEdit}>{db.clients.filter(c=>!c.isInternal).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div>}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
         <div style={{marginBottom:15}}><label style={{display:"block",fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",color:"#7A6558",marginBottom:6}}>Prioridade</label><select style={iS} value={form.priority||"media"} onChange={e=>setForm(f=>({...f,priority:e.target.value}))} disabled={!canEdit}><option value="baixa">Baixa</option><option value="media">Média</option><option value="alta">Alta</option></select></div>
         <div style={{marginBottom:15}}><label style={{display:"block",fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",color:"#7A6558",marginBottom:6}}>Status</label><select style={iS} value={form.status||"pendente"} onChange={e=>setForm(f=>({...f,status:e.target.value}))} disabled={!canEdit}><option value="pendente">Pendente</option><option value="andamento">Em Andamento</option><option value="concluido">Concluído</option></select></div>
@@ -606,7 +635,7 @@ export default function App() {
       <h2 style={{fontFamily:"'DM Serif Display',serif",fontSize:22,color:"#4B2E2B",marginBottom:6}}>{isEdit?"Editar":"Novo"} Ticket Privado</h2>
       <p style={{fontSize:12,color:"#8B7568",marginBottom:18}}>🔒 Visível apenas para você</p>
       <TitleField />
-      <div style={{marginBottom:15}}><label style={{display:"block",fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",color:"#7A6558",marginBottom:6}}>Cliente *</label><select style={iS} value={form.client??db.clients[0]?.id} onChange={e=>setForm(f=>({...f,client:parseInt(e.target.value)}))}>{db.clients.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+      <div style={{marginBottom:15}}><label style={{display:"block",fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",color:"#7A6558",marginBottom:6}}>Cliente *</label><select style={iS} value={form.client??db.clients.find(c=>!c.isInternal)?.id} onChange={e=>setForm(f=>({...f,client:parseInt(e.target.value)}))}>{db.clients.filter(c=>!c.isInternal).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
         <div style={{marginBottom:15}}><label style={{display:"block",fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",color:"#7A6558",marginBottom:6}}>Prioridade</label><select style={iS} value={form.priority||"media"} onChange={e=>setForm(f=>({...f,priority:e.target.value}))}><option value="baixa">Baixa</option><option value="media">Média</option><option value="alta">Alta</option></select></div>
         <div style={{marginBottom:15}}><label style={{display:"block",fontSize:11,textTransform:"uppercase",letterSpacing:"0.07em",color:"#7A6558",marginBottom:6}}>Status</label><select style={iS} value={form.status||"pendente"} onChange={e=>setForm(f=>({...f,status:e.target.value}))}><option value="pendente">Pendente</option><option value="andamento">Em Andamento</option><option value="concluido">Concluído</option></select></div>
