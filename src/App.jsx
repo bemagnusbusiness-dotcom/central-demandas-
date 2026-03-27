@@ -101,7 +101,7 @@ export default function App() {
   const [db,setDb]=useState(null);
   const [loading,setLoading]=useState(true);
   const [saving,setSaving]=useState(false);
-  const [currentUser,setCurrentUser]=useState(null);
+  const [currentUser,setCurrentUser]=useState(()=>{try{const s=localStorage.getItem("bm-user");return s?USERS.find(u=>u.id===JSON.parse(s))||null:null;}catch{return null;}});
   const [loginForm,setLoginForm]=useState({userId:0,pin:""});
   const [loginError,setLoginError]=useState("");
   const [page,setPage]=useState("overview");
@@ -127,15 +127,22 @@ export default function App() {
 
   const load=useCallback(async()=>{
     try{
-      const {data,error}=await supabase.from("app_data").select("value").eq("key",STORAGE_KEY).maybeSingle();
-      if(error||!data)setDb(DEFAULT_DATA);
-      else setDb(data.value);
+      const {data,error}=await supabase.from("app_data").select("value").eq("key",STORAGE_KEY).limit(1).order("id",{ascending:false});
+      if(error||!data||data.length===0)setDb(DEFAULT_DATA);
+      else setDb(data[0].value);
     }catch{setDb(DEFAULT_DATA);}
     setLoading(false);
   },[]);
   const save=useCallback(async(nd)=>{
     setSaving(true);
-    const {error}=await supabase.from("app_data").upsert({key:STORAGE_KEY,value:nd},{onConflict:"key"});
+    // Try update first; if no rows affected, insert
+    const {data:existing}=await supabase.from("app_data").select("id").eq("key",STORAGE_KEY).limit(1);
+    let error;
+    if(existing&&existing.length>0){
+      ({error}=await supabase.from("app_data").update({value:nd}).eq("key",STORAGE_KEY));
+    }else{
+      ({error}=await supabase.from("app_data").insert({key:STORAGE_KEY,value:nd}));
+    }
     if(error){console.error("Save error:",error);setToast({msg:"❌ Erro ao salvar: "+error.message,visible:true});setTimeout(()=>setToast(t=>({...t,visible:false})),4000);}
     setSaving(false);
   },[]);
@@ -149,9 +156,9 @@ export default function App() {
     const user=USERS.find(u=>u.id===parseInt(loginForm.userId));
     if(!user){setLoginError("Usuário não encontrado.");return;}
     if(user.pin!==loginForm.pin){setLoginError("PIN incorreto.");return;}
-    setCurrentUser(user);setLoginError("");setPage(user.role==="admin"?"overview":"tickets");
+    setCurrentUser(user);localStorage.setItem("bm-user",JSON.stringify(user.id));setLoginError("");setPage(user.role==="admin"?"overview":"tickets");
   };
-  const handleLogout=()=>{setCurrentUser(null);setLoginForm({userId:0,pin:""});setPage("overview");};
+  const handleLogout=()=>{setCurrentUser(null);localStorage.removeItem("bm-user");setLoginForm({userId:0,pin:""});setPage("overview");};
   const getClientName=(id)=>db?.clients.find(c=>c.id===id)?.name||"—";
 
   const openModal=(type,item=null,extra=null)=>{
